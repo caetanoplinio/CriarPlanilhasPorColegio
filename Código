@@ -1,0 +1,56 @@
+Sub CriarPlanilhasPorColegio()
+    Dim ws As Worksheet
+    Dim novaWs As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim nomeColegio As String
+    Dim nomeValido As String
+    
+    ' Definir a planilha principal
+    Set ws = ThisWorkbook.Sheets("IDEB_Escolas (ENSINO MÉDIO)")
+    
+    ' Determinar a última linha com dados na coluna E (que contém os nomes dos colégios)
+    ultimaLinha = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+    
+    ' Iterar sobre cada linha de dados (começando na linha 11)
+    For i = 11 To ultimaLinha
+        nomeColegio = ws.Cells(i, 5).Value  ' Coluna E tem o nome do colégio
+        
+        ' Substituir caracteres inválidos e limitar o comprimento do nome a 31 caracteres
+        nomeValido = Replace(nomeColegio, "\", "")
+        nomeValido = Replace(nomeValido, "/", "")
+        nomeValido = Replace(nomeValido, "*", "")
+        nomeValido = Replace(nomeValido, "[", "")
+        nomeValido = Replace(nomeValido, "]", "")
+        nomeValido = Replace(nomeValido, ":", "")
+        nomeValido = Replace(nomeValido, "?", "")
+        nomeValido = Replace(nomeValido, """", "")
+        
+        If Len(nomeValido) > 31 Then
+            nomeValido = Left(nomeValido, 31)
+        End If
+        
+        ' Verificar se já existe uma planilha com o nome do colégio
+        On Error Resume Next
+        Set novaWs = ThisWorkbook.Sheets(nomeValido)
+        On Error GoTo 0
+        
+        ' Se a planilha não existir, criar uma nova
+        If novaWs Is Nothing Then
+            Set novaWs = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+            novaWs.Name = nomeValido
+            
+            ' Copiar cabeçalho (linhas 1 a 10)
+            ws.Range("A1:AL10").Copy novaWs.Range("A1")
+            
+            ' Copiar dados do colégio (linha atual)
+            ws.Range(ws.Cells(i, 1), ws.Cells(i, 38)).Copy novaWs.Range("A11")
+            
+            ' Copiar rodapé (linhas 46 a 58)
+            ws.Range("A46:AL58").Copy novaWs.Range("A46")
+        End If
+        
+        ' Limpar a variável de planilha para a próxima iteração
+        Set novaWs = Nothing
+    Next i
+End Sub
